@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <title>Voting System</title>
+</head>
+
+<body>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
+
+
+        <div class="d-flex flex-column align-items-center justify-content-center " style="min-height: 100vh;">
+            <div class="d-flex flex-column align-items-center justify-content-center border border-2 border-dark border-dashed custom-container">
+                <h1 id="votingTitle" class="mb-4 display-4 fw-bold text-primary text-dark ">Insert Title</h1>
+                <div class="d-flex flex-row align-items-center justify-content-center mb-4">
+                    <button class="btn btn-danger btn-lg mx-2" id="addOption">Add Option</button>
+                    <button class="btn btn-danger btn-lg mx-2" id="changeTitle">Change Title</button>
+                </div>
+            </div>
+            <div class="custom-container">
+                <div class="text-center mt-4">
+                    <h3 class="mb-2 text-primary text-dark">Choose your options: </h3>
+                </div>
+                <ul id="optionsList" class="d-flex flex-column align-items-center"></ul>
+            </div>
+        </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('update', (votes, title) => {
+            const optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = ''
+
+            votes.forEach((option, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<h7>${option.name}: </h7> <h7> ${option.votes}</h7><div class="custom"><button onclick = updateVote(${index}) class="btn btn-success btn-sm mb-4 ">vote</button><button onclick = renameOption(${index}) class="btn btn-primary btn-sm mb-4 mx-4">rename</button><button onclick = deleteOption(${index}) class="btn btn-danger btn-sm mb-4">delete</button></div>`;
+                optionsList.appendChild(listItem);
+            });
+            document.getElementById('votingTitle').textContent = title
+        });
+
+        document.getElementById('addOption').addEventListener('click', () => {
+            const newOption = prompt('Enter the new option:');
+            if (newOption) {
+                const optionsList = document.getElementById('optionsList');
+                optionsList.innerHTML = '';
+                socket.emit('addOption', newOption);
+            }
+        });
+
+        document.getElementById('changeTitle').addEventListener('click', () => {
+            const newTitle = prompt('Enter the new title:');
+            if (newTitle) {
+                socket.emit('changeTitle', newTitle)
+            }
+        });
+
+        function updateVote(option) {
+            socket.emit('vote', option)
+        }
+
+        function deleteOption(option) {
+            socket.emit('deleteOption', option)
+        }
+
+        function renameOption(option) {
+            const newName = prompt('Enter the new Name')
+            socket.emit('renameOption', option, newName)
+        }
+
+    </script>
+    <style>
+        #optionsList {
+            list-style-type: none;
+        }
+        .custom-container {
+            width: 25%;
+            border: 2px solid #000000;
+        }
+    </style>
+</body>
+
+</html>
